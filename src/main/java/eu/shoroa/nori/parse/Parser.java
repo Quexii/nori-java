@@ -62,18 +62,18 @@ public class Parser {
     private Node.Number parseNumber() {
         final Token tok = expect(TokenType.NUMBER);
 
-        return new Node.Number(true, Double.parseDouble(tok.buffer.toString()));
+        return new Node.Number(Double.parseDouble(tok.buffer.toString()));
     }
 
     private Node.String parseString() {
         final Token tok = expect(TokenType.STRING);
 
-        return new Node.String(true, tok);
+        return new Node.String(tok);
     }
 
     private Node.Bool parseBool() {
         final Token tok = expect(TokenType.BOOL);
-        return new Node.Bool(true, tok.buffer.toString().equals("true"));
+        return new Node.Bool(tok.buffer.toString().equals("true"));
     }
 
     private Node.Obj parseObjectBody(Token name) {
@@ -99,15 +99,13 @@ public class Parser {
 
         expect(TokenType.RBRACE);
 
-        return new Node.Obj(NodeType.OBJECT, true, new NodeObject(name, properties, defaultValue, false));
+        return new Node.Obj(NodeType.OBJECT, new NodeObject(name, properties, defaultValue, false));
     }
 
     private Node.Obj parseObject() {
         Token name;
-        if (peek().type == TokenType.IDENTIFIER)
-            name = expect(TokenType.IDENTIFIER);
-        else
-            name = new Token(TokenType.IDENTIFIER, peek().start, 0, peek().line, peek().column, null);
+        if (peek().type == TokenType.IDENTIFIER) name = expect(TokenType.IDENTIFIER);
+        else name = new Token(TokenType.IDENTIFIER, peek().start, 0, peek().line, peek().column, null);
 
         return parseObjectBody(name);
     }
@@ -115,7 +113,7 @@ public class Parser {
     private Node.Identifier parseIdentifier() {
         final Token tok = expect(TokenType.IDENTIFIER);
 
-        return new Node.Identifier(true, tok);
+        return new Node.Identifier(tok);
     }
 
     private Node.Reference parseReference() {
@@ -126,17 +124,28 @@ public class Parser {
             throw new IllegalStateException("Unresolved reference @" + tok.buffer + " at line " + tok.line + ", col " + tok.column + " (not registered via Nori#addReference before parsing)");
         }
 
-        return new Node.Reference(true, value);
+        return new Node.Reference(value);
     }
 
     private Node.Array parseArray() {
         expect(TokenType.LBRACKET);
 
         List<Node<?>> elements = new ArrayList<>();
+        Node<?> defaultValue = null;
 
         while (peek().type != TokenType.RBRACKET) {
-            Node<?> node = parseValue();
+            if (peek().type == TokenType.BANG) {
+                if (defaultValue != null) {
+                    throw new IllegalStateException("Duplicate \"!\" default value at line " + peek().line + ", column " + peek().column);
+                }
 
+                advance();
+                expect(TokenType.EQUALS);
+                defaultValue = parseValue();
+                continue;
+            }
+
+            Node<?> node = parseValue();
             if (node != null) {
                 elements.add(node);
             }
@@ -144,13 +153,13 @@ public class Parser {
 
         expect(TokenType.RBRACKET);
 
-        return new Node.Array(NodeType.ARRAY, true, new NodeArray(elements));
+        return new Node.Array(NodeType.ARRAY, new NodeArray(elements, defaultValue));
     }
 
     private Node.Link parseLink() {
         final Token tok = expect(TokenType.LINK);
 
-        return new Node.Link(true, tok);
+        return new Node.Link(tok);
     }
 
     private Node<?> parseValue() {
@@ -162,8 +171,7 @@ public class Parser {
             case BOOL:
                 return parseBool();
             case IDENTIFIER:
-                if (peek(1).type == TokenType.LBRACE)
-                    return parseObject();
+                if (peek(1).type == TokenType.LBRACE) return parseObject();
                 return parseIdentifier();
             case REF:
                 return parseReference();
@@ -177,11 +185,7 @@ public class Parser {
                 Token tok = peek();
                 advance();
 
-                System.err.println(
-                        "Unexpected token [" + tok.type +
-                                "] line [" + tok.line +
-                                "], column [" + tok.column + "]"
-                );
+                System.err.println("Unexpected token [" + tok.type + "] line [" + tok.line + "], column [" + tok.column + "]");
 
                 return null;
         }
@@ -237,6 +241,13 @@ public class Parser {
                     }
                     i++;
                 }
+
+                if (array.value.defaultValue != null && array.value.defaultValue.type == NodeType.LINK) {
+                    array.value.defaultValue = resolveLink(root, array.value.defaultValue);
+                    array.value.defaultValueIsLink = true;
+                } else {
+                    resolveLinksIn(root, array.value.defaultValue);
+                }
                 break;
             default:
                 break;
@@ -253,7 +264,7 @@ public class Parser {
             }
         }
 
-        Node.Array root = new Node.Array(NodeType.ARRAY, true, new NodeArray(elements));
+        Node.Array root = new Node.Array(NodeType.ARRAY, new NodeArray(elements, null));
 
         resolveLinksIn(root, root);
 

@@ -5,60 +5,58 @@ import eu.shoroa.nori.token.Token;
 @SuppressWarnings("unused")
 public abstract class Node<T> {
     public final NodeType type;
-    public final boolean ownsString;
     public final T value;
 
-    protected Node(NodeType type, boolean ownsString, T value) {
+    protected Node(NodeType type, T value) {
         this.type = type;
-        this.ownsString = ownsString;
         this.value = value;
     }
 
     public static class Number extends Node<Double> {
-        public Number(boolean ownsString, Double value) {
-            super(NodeType.NUMBER, ownsString, value);
+        public Number(Double value) {
+            super(NodeType.NUMBER, value);
         }
     }
 
     public static class String extends Node<Token> {
-        public String(boolean ownsString, Token value) {
-            super(NodeType.STRING, ownsString, value);
+        public String(Token value) {
+            super(NodeType.STRING, value);
         }
     }
 
     public static class Identifier extends Node<Token> {
-        public Identifier(boolean ownsString, Token value) {
-            super(NodeType.IDENTIFIER, ownsString, value);
+        public Identifier(Token value) {
+            super(NodeType.IDENTIFIER, value);
         }
     }
 
     public static class Bool extends Node<Boolean> {
-        public Bool(boolean ownsString, Boolean value) {
-            super(NodeType.BOOL, ownsString, value);
+        public Bool(Boolean value) {
+            super(NodeType.BOOL, value);
         }
     }
 
     public static class Obj extends Node<NodeObject> {
-        protected Obj(NodeType type, boolean ownsString, NodeObject value) {
-            super(type, ownsString, value);
+        protected Obj(NodeType type,  NodeObject value) {
+            super(type, value);
         }
     }
 
     public static class Array extends Node<NodeArray> {
-        protected Array(NodeType type, boolean ownsString, NodeArray value) {
-            super(type, ownsString, value);
+        protected Array(NodeType type, NodeArray value) {
+            super(type, value);
         }
     }
 
     public static class Reference extends Node<Object> {
-        public Reference(boolean ownsString, Object value) {
-            super(NodeType.REF, ownsString, value);
+        public Reference(Object value) {
+            super(NodeType.REF, value);
         }
     }
 
     public static class Link extends Node<Token> {
-        public Link(boolean ownsString, Token value) {
-            super(NodeType.LINK, ownsString, value);
+        public Link(Token value) {
+            super(NodeType.LINK, value);
         }
     }
 
@@ -191,8 +189,17 @@ public abstract class Node<T> {
     }
 
     public static Node<?> getDefault(Node<?> node) {
-        if (node == null || node.type != NodeType.OBJECT) return null;
-        return ((Node.Obj) node).value.defaultValue;
+        if (node == null) return null;
+
+        if (node.type == NodeType.OBJECT) {
+            return ((Node.Obj) node).value.defaultValue;
+        }
+
+        if (node.type == NodeType.ARRAY) {
+            return ((Node.Array) node).value.defaultValue;
+        }
+
+        return null;
     }
 
     public Node<?> getDefault() {

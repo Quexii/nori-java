@@ -60,7 +60,7 @@ public class Nori {
         printIndent(depth);
         switch (node.type) {
             case NUMBER:
-                System.out.printf("Number: %f\n", (double) node.value);
+                System.out.printf("Number: %f\n", (Double) node.value);
                 break;
             case BOOL:
                 System.out.printf("Bool: %b\n", node.value);

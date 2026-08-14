@@ -1,14 +1,27 @@
 character {
-  name = "AMIYA"
-  rarity = 4
-  rL = $rarity /* a link to 'rarity' property */
-  base {
-    health = 100
-    attack = 20
-    cooldown = 1
-  }
-  art {
-    character = @amiya
-    ! = $art.character // default value for objects
-  }
+    name = "Steve"
+    rarity = 4
+
+    capabilities {
+        health = 100
+        attack = 20
+        cooldown = 1
+    }
+
+    items = [
+        {
+            name = "Sword"
+            damage = 25
+            durability = 100
+            sprite = @swordSprite
+        }
+        {
+            name = "Pickaxe"
+            damage = 4
+            durability = 100
+            sprite = @pickaxeSprite
+        }
+        "string"
+        ! = $items.0
+    ]
 }
