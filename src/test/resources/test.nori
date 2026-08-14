@@ -1,0 +1,14 @@
+character {
+  name = "AMIYA"
+  rarity = 4
+  rL = $rarity /* a link to 'rarity' property */
+  base {
+    health = 100
+    attack = 20
+    cooldown = 1
+  }
+  art {
+    character = @amiya
+    ! = $art.character // default value for objects
+  }
+}
