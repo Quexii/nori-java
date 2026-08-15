@@ -10,10 +10,11 @@ public class BuilderTest {
         Node.Obj root = n.newObject(null);
         n.insertProperty(root, "name", n.newString("Sword"));
         n.insertProperty(root, "damage", n.newDouble(10));
+        n.insertProperty(root, "color", n.newBinary(12));
         n.insertProperty(root, "sprite", n.newRef("swordSprite"));
         n.insertProperty(root, "link", n.newLink("name"));
         n.insertProperty(root, "array", n.newArray());
-        n.insertProperty(root, null, n.newObject(null));
+        n.insertProperty(root, null, n.newObject("hello"));
         n.setDefault(root, root.get("name"));
         for (int i = 0; i < 5; i++) {
             Node.Obj obj = n.newObject(null);

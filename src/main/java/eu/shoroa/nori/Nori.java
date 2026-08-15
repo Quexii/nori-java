@@ -48,6 +48,18 @@ public class Nori {
         return new Node.Number(NodeNumber.ofLong(number));
     }
 
+    public Node.Number newHex(int number) {
+        return new Node.Number(NodeNumber.ofHex(number));
+    }
+
+    public Node.Number newBinary(int number) {
+        return new Node.Number(NodeNumber.ofBinary(number));
+    }
+
+    public Node.Number newOctal(int number) {
+        return new Node.Number(NodeNumber.ofOctal(number));
+    }
+
     public Node.String newString(@NotNull final CharSequence str) {
         return new Node.String(new Token(TokenType.STRING, 0, 0, CharBuffer.wrap(str)));
     }

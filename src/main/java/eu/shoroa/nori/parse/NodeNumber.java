@@ -23,6 +23,18 @@ public class NodeNumber {
         return new NodeNumber(NumberType.LONG, 0, value, 0, 0);
     }
 
+    public static NodeNumber ofHex(int value) {
+        return new NodeNumber(NumberType.HEX, value, 0, 0, 0);
+    }
+
+    public static NodeNumber ofBinary(int value) {
+        return new NodeNumber(NumberType.BINARY, value, 0, 0, 0);
+    }
+
+    public static NodeNumber ofOctal(int value) {
+        return new NodeNumber(NumberType.OCTAL, value, 0, 0, 0);
+    }
+
     public static NodeNumber ofDouble(double value) {
         return new NodeNumber(NumberType.DOUBLE, 0, 0, value, 0);
     }

@@ -71,13 +71,13 @@ public final class NoriSerializer {
                 out.append(node.value.intValue);
                 break;
             case BINARY:
-                out.append("0b").append(Long.toBinaryString(node.value.longValue));
+                out.append("0b").append(Integer.toBinaryString(node.value.intValue));
                 break;
             case OCTAL:
-                out.append("0o").append(Long.toOctalString(node.value.longValue));
+                out.append("0o").append(Integer.toOctalString(node.value.intValue));
                 break;
             case HEX:
-                out.append("0x").append(Long.toHexString(node.value.longValue));
+                out.append("0x").append(Integer.toHexString(node.value.intValue));
                 break;
             default:
                 throw new IllegalArgumentException("Cannot stringify number type: " + node.value.type);
