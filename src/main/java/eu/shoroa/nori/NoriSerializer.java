@@ -22,7 +22,7 @@ public final class NoriSerializer {
 
         switch (node.type) {
             case NUMBER:
-                out.append(node.value);
+                stringifyNumber((Node.Number) node, out);
                 break;
 
             case BOOL:
@@ -58,6 +58,32 @@ public final class NoriSerializer {
         }
     }
 
+    private static void stringifyNumber(Node.Number node, StringBuilder out) {
+        switch (node.value.type) {
+            case DOUBLE:
+            case FLOAT:
+                out.append(node.value.doubleValue);
+                break;
+            case LONG:
+                out.append(node.value.longValue);
+                break;
+            case INT:
+                out.append(node.value.intValue);
+                break;
+            case BINARY:
+                out.append("0b").append(Long.toBinaryString(node.value.longValue));
+                break;
+            case OCTAL:
+                out.append("0o").append(Long.toOctalString(node.value.longValue));
+                break;
+            case HEX:
+                out.append("0x").append(Long.toHexString(node.value.longValue));
+                break;
+            default:
+                throw new IllegalArgumentException("Cannot stringify number type: " + node.value.type);
+        }
+    }
+
     private static void stringifyObject(Node.Obj node, StringBuilder out, int depth) {
 
         CharSequence name = node.value.name.buffer;
@@ -71,7 +97,9 @@ public final class NoriSerializer {
         for (Property property : node.value.properties) {
             indent(out, depth + 1);
 
-            out.append(property.token.buffer).append(" = ");
+            if (property.token != null && property.token.buffer != null) {
+                out.append(property.token.buffer).append(" = ");
+            }
 
             stringifyNode(property.value, out, depth + 1);
             out.append('\n');

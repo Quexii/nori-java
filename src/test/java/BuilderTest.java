@@ -13,6 +13,7 @@ public class BuilderTest {
         n.insertProperty(root, "sprite", n.newRef("swordSprite"));
         n.insertProperty(root, "link", n.newLink("name"));
         n.insertProperty(root, "array", n.newArray());
+        n.insertProperty(root, null, n.newObject(null));
         n.setDefault(root, root.get("name"));
         for (int i = 0; i < 5; i++) {
             Node.Obj obj = n.newObject(null);

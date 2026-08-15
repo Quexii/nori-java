@@ -11,13 +11,13 @@ character {
     }
 
     items = [
-        {
+        one {
             name = "Sword"
             damage = 25
             durability = 100
             sprite = @swordSprite
         }
-        {
+        two {
             name = "Pickaxe"
             damage = 4
             durability = 100
