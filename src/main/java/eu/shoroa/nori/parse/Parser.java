@@ -61,8 +61,30 @@ public class Parser {
 
     private Node.Number parseNumber() {
         final Token tok = expect(TokenType.NUMBER);
+        String value = tok.buffer.toString();
 
-        return new Node.Number(Double.parseDouble(tok.buffer.toString()));
+        boolean negative = value.startsWith("-");
+        boolean positive = value.startsWith("+");
+
+        int offset = (negative || positive) ? 1 : 0;
+
+        double number;
+
+        if (value.regionMatches(true, offset, "0x", 0, 2)) {
+            number = Long.parseLong(value.substring(offset + 2), 16);
+        } else if (value.regionMatches(true, offset, "0b", 0, 2)) {
+            number = Long.parseLong(value.substring(offset + 2), 2);
+        } else if (value.regionMatches(true, offset, "0o", 0, 2)) {
+            number = Long.parseLong(value.substring(offset + 2), 8);
+        } else {
+            number = Double.parseDouble(value);
+        }
+
+        if (negative) {
+            number = -number;
+        }
+
+        return new Node.Number(number);
     }
 
     private Node.String parseString() {

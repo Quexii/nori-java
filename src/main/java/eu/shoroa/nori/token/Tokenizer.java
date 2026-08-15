@@ -107,6 +107,19 @@ public class Tokenizer {
         return true;
     }
 
+    private static boolean isHexDigit(char c) {
+        return Character.isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
+    private static boolean isOctalDigit(char c) {
+        return c >= '0' && c <= '7';
+    }
+
+    private Token makeNumberToken(int start) {
+        CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
+        return new Token(TokenType.NUMBER, line, column, buf);
+    }
+
     private Token scanIdentifier() {
         final int start = pos;
 
@@ -160,14 +173,63 @@ public class Tokenizer {
     private Token scanNumber() {
         final int start = pos;
 
-        while (isDigit(peek())) advance();
-
-        if (peek() == '.') {
-            do advance(); while (isDigit(peek()));
+        if (peek() == '+' || peek() == '-') {
+            advance();
         }
 
-        CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(TokenType.NUMBER, line, column, buf);
+        if (peek() == '0') {
+            char prefix = peek(1);
+
+            if (prefix == 'x' || prefix == 'X') {
+                advance();
+                do {
+                    advance();
+                } while (isHexDigit(peek()));
+                return makeNumberToken(start);
+            }
+
+            if (prefix == 'b' || prefix == 'B') {
+                advance();
+                advance();
+                do {
+                    advance();
+                } while (peek() == '0' || peek() == '1');
+
+                return makeNumberToken(start);
+            }
+
+            if (prefix == 'o' || prefix == 'O') {
+                advance();
+                do {
+                    advance();
+                } while (isOctalDigit(peek()));
+
+                return makeNumberToken(start);
+            }
+        }
+
+        while (isDigit(peek())) {
+            advance();
+        }
+
+        if (peek() == '.') {
+            do {
+                advance();
+            } while (isDigit(peek()));
+        }
+
+        if (peek() == 'e' || peek() == 'E') {
+            advance();
+            if (peek() == '+' || peek() == '-') {
+                advance();
+            }
+
+            do {
+                advance();
+            } while (isDigit(peek()));
+        }
+
+        return makeNumberToken(start);
     }
 
     private Token scanRef() {
@@ -193,7 +255,7 @@ public class Tokenizer {
 
             if (isAlpha(c)) tokens.add(scanIdentifier());
             else if (c == '"') tokens.add(scanString());
-            else if (isDigit(c)) tokens.add(scanNumber());
+            else if (isDigit(c) || c == '-') tokens.add(scanNumber());
             else if (c == '=') tokens.add(scanSingleToken(TokenType.EQUALS));
             else if (c == '{') tokens.add(scanSingleToken(TokenType.LBRACE));
             else if (c == '}') tokens.add(scanSingleToken(TokenType.RBRACE));

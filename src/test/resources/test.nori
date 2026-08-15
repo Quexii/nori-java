@@ -3,7 +3,7 @@ character {
     rarity = 4
 
     capabilities {
-        health = 100
+        health = 0xff
         attack = 20
         cooldown = 1
     }
