@@ -1,6 +1,5 @@
 import eu.shoroa.nori.Nori;
 import eu.shoroa.nori.parse.Node;
-import eu.shoroa.nori.parse.Parser;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -21,6 +20,9 @@ public class ParserTest {
 
         Node<?> root = nori.parse(input);
 
+        System.out.println(0xFFFF00FF);
+        System.out.println(root.get("color").getInt());
+
         System.out.println();
         System.out.println();
 
@@ -29,8 +31,8 @@ public class ParserTest {
             if (root.get("items." + i) instanceof Node.Obj) {
                 items[i] = new Character.Item(
                         root.get("items." + i + ".name").getString().toString(),
-                        (int) root.get("items." + i + ".damage").getNumber(),
-                        (int) root.get("items." + i + ".durability").getNumber(),
+                        (int) root.get("items." + i + ".damage").getDouble(),
+                        (int) root.get("items." + i + ".durability").getDouble(),
                         root.get("items." + i + ".sprite").getRef(null).toString()
                 );
             }
@@ -41,11 +43,11 @@ public class ParserTest {
 
         Character character = new Character(
                 root.get("name").getString().toString(),
-                (int) root.get("rarity").getNumber(),
+                (int) root.get("rarity").getDouble(),
                 new Character.Capabilities(
-                        (int) root.get("capabilities.health").getNumber(),
-                        (int) root.get("capabilities.attack").getNumber(),
-                        (int) root.get("capabilities.cooldown").getNumber()
+                        (int) root.get("capabilities.health").getDouble(),
+                        (int) root.get("capabilities.attack").getDouble(),
+                        (int) root.get("capabilities.cooldown").getDouble()
                 ),
                 items
         );

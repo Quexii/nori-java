@@ -59,32 +59,103 @@ public class Parser {
         return new Property(name, value, false);
     }
 
+    private static boolean isPrefixedNumber(String value) {
+        if (value.length() < 2 || value.charAt(0) != '0') {
+            return false;
+        }
+
+        switch (Character.toLowerCase(value.charAt(1))) {
+            case 'x':
+            case 'b':
+            case 'o':
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private NodeNumber parsePrefixedNumber(String literal, boolean negative, Token tok) {
+        char prefix = Character.toLowerCase(literal.charAt(1));
+
+        int radix;
+        switch (prefix) {
+            case 'x':
+                radix = 16;
+                break;
+            case 'b':
+                radix = 2;
+                break;
+            case 'o':
+                radix = 8;
+                break;
+            default:
+                throw new AssertionError();
+        }
+
+        boolean isLong = literal.endsWith("l") || literal.endsWith("L");
+
+        if (isLong) {
+            literal = literal.substring(0, literal.length() - 1);
+        }
+
+        String digits = literal.substring(2);
+
+        if (digits.isEmpty())
+            throw new IllegalStateException("Invalid numeric literal [" + tok.buffer + "] at line " + tok.line + ", column " + tok.column);
+
+        long value = Long.parseLong(digits, radix);
+
+        if (negative) value = -value;
+
+        if (isLong) return NodeNumber.ofLong(value);
+
+        if (radix == 16 && digits.length() <= 8) return NodeNumber.ofInt((int) value);
+
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) return NodeNumber.ofInt((int) value);
+
+        return NodeNumber.ofLong(value);
+    }
+
+    private NodeNumber parseDecimalNumber(String literal, boolean negative) {
+        boolean isFloat = literal.endsWith("f") || literal.endsWith("F");
+        boolean isLong = literal.endsWith("l") || literal.endsWith("L");
+
+        if (isFloat || isLong) literal = literal.substring(0, literal.length() - 1);
+        boolean floating = isFloat || literal.indexOf('.') >= 0 || literal.indexOf('e') >= 0 || literal.indexOf('E') >= 0;
+
+        if (floating) {
+            double value = Double.parseDouble(literal);
+
+            if (negative) value = -value;
+
+            return isFloat ? NodeNumber.ofFloat((float) value) : NodeNumber.ofDouble(value);
+        }
+
+        long value = Long.parseLong(literal, 10);
+
+        if (negative) value = -value;
+        if (isLong) return NodeNumber.ofLong(value);
+        if (value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE) return NodeNumber.ofInt((int) value);
+
+        return NodeNumber.ofLong(value);
+    }
+
+    private NodeNumber parseNumberValue(String literal, Token tok) {
+        boolean negative = literal.startsWith("-");
+        boolean positive = literal.startsWith("+");
+
+        String value = (negative || positive) ? literal.substring(1) : literal;
+
+        if (isPrefixedNumber(value)) {
+            return parsePrefixedNumber(value, negative, tok);
+        }
+
+        return parseDecimalNumber(value, negative);
+    }
+
     private Node.Number parseNumber() {
         final Token tok = expect(TokenType.NUMBER);
-        String value = tok.buffer.toString();
-
-        boolean negative = value.startsWith("-");
-        boolean positive = value.startsWith("+");
-
-        int offset = (negative || positive) ? 1 : 0;
-
-        double number;
-
-        if (value.regionMatches(true, offset, "0x", 0, 2)) {
-            number = Long.parseLong(value.substring(offset + 2), 16);
-        } else if (value.regionMatches(true, offset, "0b", 0, 2)) {
-            number = Long.parseLong(value.substring(offset + 2), 2);
-        } else if (value.regionMatches(true, offset, "0o", 0, 2)) {
-            number = Long.parseLong(value.substring(offset + 2), 8);
-        } else {
-            number = Double.parseDouble(value);
-        }
-
-        if (negative) {
-            number = -number;
-        }
-
-        return new Node.Number(number);
+        return new Node.Number(parseNumberValue(tok.buffer.toString(), tok));
     }
 
     private Node.String parseString() {

@@ -9,7 +9,7 @@ public class BuilderTest {
 
         Node.Obj root = n.newObject(null);
         n.insertProperty(root, "name", n.newString("Sword"));
-        n.insertProperty(root, "damage", n.newNumber(10));
+        n.insertProperty(root, "damage", n.newDouble(10));
         n.insertProperty(root, "sprite", n.newRef("swordSprite"));
         n.insertProperty(root, "link", n.newLink("name"));
         n.insertProperty(root, "array", n.newArray());

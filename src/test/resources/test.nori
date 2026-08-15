@@ -2,6 +2,8 @@ character {
     name = "Steve"
     rarity = 4
 
+    color = 0xFFFF00FF
+
     capabilities {
         health = 0xff
         attack = 20

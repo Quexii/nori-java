@@ -32,8 +32,20 @@ public class Nori {
         return new Token(TokenType.IDENTIFIER, 0, 0, name == null ? null : CharBuffer.wrap(name));
     }
 
-    public Node.Number newNumber(@NotNull Number number) {
-        return new Node.Number(number.doubleValue());
+    public Node.Number newDouble(double number) {
+        return new Node.Number(NodeNumber.ofDouble(number));
+    }
+
+    public Node.Number newFloat(float number) {
+        return new Node.Number(NodeNumber.ofFloat(number));
+    }
+
+    public Node.Number newInt(int number) {
+        return new Node.Number(NodeNumber.ofInt(number));
+    }
+
+    public Node.Number newLong(long number) {
+        return new Node.Number(NodeNumber.ofLong(number));
     }
 
     public Node.String newString(@NotNull final CharSequence str) {
