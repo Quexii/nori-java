@@ -25,13 +25,19 @@ public class Tokenizer {
     }
 
     private void advance() {
-        if (peek() == '\0') return;
+        char c = peek();
+
+        if (c == '\0') {
+            return;
+        }
 
         pos++;
-        column++;
-        if (peek() == '\n') {
+
+        if (c == '\n') {
             line++;
-            column = 0;
+            column = 1;
+        } else {
+            column++;
         }
     }
 
@@ -58,7 +64,8 @@ public class Tokenizer {
                 advance();
 
                 while (!(peek() == '*' && peek(1) == '/')) {
-                    if (peek() == '\0') return;
+                    if (peek() == '\0')
+                        throw new RuntimeException("Unterminated comment at line " + line + ", column " + column);
 
                     advance();
                 }
@@ -115,7 +122,7 @@ public class Tokenizer {
         } else tokenType = TokenType.IDENTIFIER;
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(tokenType, start, len, line, column, buf);
+        return new Token(tokenType, line, column, buf);
     }
 
     private Token scanLink() {
@@ -125,7 +132,7 @@ public class Tokenizer {
         while (isAlNum(peek()) || (peek() == '.' && isAlNum(peek(1)))) advance();
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(TokenType.LINK, start, pos - start, line, column, buf);
+        return new Token(TokenType.LINK, line, column, buf);
     }
 
     private Token scanString() {
@@ -134,11 +141,12 @@ public class Tokenizer {
 
         while (isNext()) ;
 
-        assert peek() == '"';
+        if (peek() != '"')
+            throw new RuntimeException("Unterminated string literal at line " + line + ", column " + column);
         advance();
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos - 1).slice();
-        return new Token(TokenType.STRING, start, pos - start - 1, line, column, buf);
+        return new Token(TokenType.STRING, line, column, buf);
     }
 
     private Token scanSingleToken(TokenType type) {
@@ -146,7 +154,7 @@ public class Tokenizer {
         advance();
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(type, start, 1, line, column, buf);
+        return new Token(type, line, column, buf);
     }
 
     private Token scanNumber() {
@@ -159,7 +167,7 @@ public class Tokenizer {
         }
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(TokenType.NUMBER, start, pos - start, line, column, buf);
+        return new Token(TokenType.NUMBER, line, column, buf);
     }
 
     private Token scanRef() {
@@ -169,7 +177,7 @@ public class Tokenizer {
         while (isAlNum(peek())) advance();
 
         CharBuffer buf = CharBuffer.wrap(str, start, pos).slice();
-        return new Token(TokenType.REF, start, pos - start, line, column, buf);
+        return new Token(TokenType.REF, line, column, buf);
     }
 
     public List<Token> tokenize(String input) {
@@ -205,7 +213,7 @@ public class Tokenizer {
         }
         CharBuffer buf = CharBuffer.wrap(str, pos, pos).slice();
         if (peek() == '\0') {
-            tokens.add(new Token(TokenType.EOF, pos, 0, line, column, buf));
+            tokens.add(new Token(TokenType.EOF, line, column, buf));
         }
 
         return tokens;

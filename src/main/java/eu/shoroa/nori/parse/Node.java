@@ -37,14 +37,14 @@ public abstract class Node<T> {
     }
 
     public static class Obj extends Node<NodeObject> {
-        protected Obj(NodeType type,  NodeObject value) {
-            super(type, value);
+        public Obj(NodeObject value) {
+            super(NodeType.OBJECT, value);
         }
     }
 
     public static class Array extends Node<NodeArray> {
-        protected Array(NodeType type, NodeArray value) {
-            super(type, value);
+        public Array(NodeArray value) {
+            super(NodeType.ARRAY, value);
         }
     }
 

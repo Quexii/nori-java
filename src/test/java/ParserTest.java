@@ -19,9 +19,7 @@ public class ParserTest {
         }
         String input = sb.toString();
 
-        Parser parser = nori.parser(input);
-        Node<?> root = parser.parse();
-        Nori.printNode(root, 0);
+        Node<?> root = nori.parse(input);
 
         System.out.println();
         System.out.println();
@@ -37,6 +35,9 @@ public class ParserTest {
                 );
             }
         }
+
+        System.out.println();
+        System.out.println();
 
         Character character = new Character(
                 root.get("name").getString().toString(),

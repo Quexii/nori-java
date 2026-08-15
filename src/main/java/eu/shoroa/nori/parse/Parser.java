@@ -99,13 +99,13 @@ public class Parser {
 
         expect(TokenType.RBRACE);
 
-        return new Node.Obj(NodeType.OBJECT, new NodeObject(name, properties, defaultValue, false));
+        return new Node.Obj(new NodeObject(name, properties, defaultValue, false));
     }
 
     private Node.Obj parseObject() {
         Token name;
         if (peek().type == TokenType.IDENTIFIER) name = expect(TokenType.IDENTIFIER);
-        else name = new Token(TokenType.IDENTIFIER, peek().start, 0, peek().line, peek().column, null);
+        else name = new Token(TokenType.IDENTIFIER, peek().line, peek().column, null);
 
         return parseObjectBody(name);
     }
@@ -153,7 +153,7 @@ public class Parser {
 
         expect(TokenType.RBRACKET);
 
-        return new Node.Array(NodeType.ARRAY, new NodeArray(elements, defaultValue));
+        return new Node.Array(new NodeArray(elements, defaultValue));
     }
 
     private Node.Link parseLink() {
@@ -185,9 +185,7 @@ public class Parser {
                 Token tok = peek();
                 advance();
 
-                System.err.println("Unexpected token [" + tok.type + "] line [" + tok.line + "], column [" + tok.column + "]");
-
-                return null;
+                throw new IllegalStateException("Unexpected token [" + tok.type + "] at line [...]");
         }
     }
 
@@ -264,7 +262,7 @@ public class Parser {
             }
         }
 
-        Node.Array root = new Node.Array(NodeType.ARRAY, new NodeArray(elements, null));
+        Node.Array root = new Node.Array(new NodeArray(elements, null));
 
         resolveLinksIn(root, root);
 

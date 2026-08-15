@@ -1,10 +1,14 @@
 package eu.shoroa.nori;
 
-import eu.shoroa.nori.parse.Node;
-import eu.shoroa.nori.parse.Parser;
-import eu.shoroa.nori.parse.Property;
+import eu.shoroa.nori.parse.*;
+import eu.shoroa.nori.token.Token;
+import eu.shoroa.nori.token.TokenType;
 import eu.shoroa.nori.token.Tokenizer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.nio.CharBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,75 +20,67 @@ public class Nori {
         refMap.put(key, value);
     }
 
-    public Parser parser(String input) {
+    public Node<?> parse(String input) {
         if (!input.endsWith("\0")) {
             input += "\0";
         }
 
-        return new Parser(tokenizer.tokenize(input), refMap);
+        return new Parser(tokenizer.tokenize(input), refMap).parse();
     }
 
-    private static void printIndent(int depth) {
-        for (int i = 0; i < depth; i++) {
-            System.out.print("  ");
+    private static Token makeOwnedToken(@Nullable final CharSequence name) {
+        return new Token(TokenType.IDENTIFIER, 0, 0, name == null ? null : CharBuffer.wrap(name));
+    }
+
+    public Node.Number newNumber(@NotNull Number number) {
+        return new Node.Number(number.doubleValue());
+    }
+
+    public Node.String newString(@NotNull final CharSequence str) {
+        return new Node.String(new Token(TokenType.STRING, 0, 0, CharBuffer.wrap(str)));
+    }
+
+    public Node.Bool newBool(@NotNull Boolean state) {
+        return new Node.Bool(state);
+    }
+
+    public Node.Obj newObject(@Nullable final CharSequence name) {
+        return new Node.Obj(new NodeObject(makeOwnedToken(name), new ArrayList<>(), null, false));
+    }
+
+    public Node.Array newArray() {
+        return new Node.Array(new NodeArray(new ArrayList<>(), null));
+    }
+
+    public Node.Reference newRef(final Object object) {
+        return new Node.Reference(object);
+    }
+
+    public Node.Link newLink(final CharSequence path) {
+        return new Node.Link(new Token(TokenType.LINK, 0, 0, CharBuffer.wrap(path)));
+    }
+
+    public void insertProperty(Node<?> root, CharSequence name, Node<?> value) {
+        if (root instanceof Node.Obj) {
+            ((Node.Obj) root).value.properties.add(new Property(makeOwnedToken(name), value, false));
+        } else if (root instanceof Node.Array) {
+            ((Node.Array) root).value.nodes.add(value);
+        } else {
+            throw new IllegalArgumentException("Root node must be of type Node.Obj or Node.Array!");
         }
     }
 
-    private static void printObject(Node.Obj node, int depth) {
-        System.out.print("Object");
-        if (node.value.name.len > 0) {
-            System.out.print(" " + node.value.name.buffer.toString());
-        }
-        System.out.print("\n");
-
-        for (Property property : node.value.properties) {
-            printIndent(depth + 1);
-            System.out.printf("Property: %s\n", property.token.buffer.toString());
-            printNode(property.value, depth + 2);
-        }
-
-        printIndent(depth);
-    }
-
-    private static void printArray(Node.Array node, int depth) {
-        System.out.print("Array\n");
-
-        for (Node<?> node1 : node.value.nodes) {
-            printNode(node1, depth + 1);
-        }
-    }
-
-    public static void printNode(Node<?> node, int depth) {
-        if (node == null) return;
-
-        printIndent(depth);
-        switch (node.type) {
-            case NUMBER:
-                System.out.printf("Number: %f\n", (Double) node.value);
-                break;
-            case BOOL:
-                System.out.printf("Bool: %b\n", node.value);
-                break;
-            case STRING:
-                System.out.printf("String: %s\n", ((Node.String) node).value.buffer.toString());
-                break;
-            case IDENTIFIER:
-                System.out.printf("Identifier: %s\n", ((Node.Identifier) node).value.buffer.toString());
-                break;
-            case REF:
-                System.out.printf("Reference: %s\n", node.value);
-                break;
-            case LINK:
-                System.out.printf("Link: %s\n", ((Node.Link) node).value.buffer.toString());
-                break;
-            case OBJECT:
-                printObject((Node.Obj) node, depth);
-                break;
-            case ARRAY:
-                printArray((Node.Array) node, depth);
-                break;
-            default:
-                System.out.printf("Unknown node type: %s\n", node.type.name());
+    public void setDefault(Node<?> root, Node<?> defaultValue) {
+        if (root instanceof Node.Obj) {
+            ((Node.Obj) root).value.defaultValue = defaultValue;
+            if (defaultValue.type == NodeType.LINK)
+                ((Node.Obj) root).value.defaultValueIsLink = true;
+        } else if (root instanceof Node.Array) {
+            ((Node.Array) root).value.defaultValue = defaultValue;
+            if (defaultValue.type == NodeType.LINK)
+                ((Node.Array) root).value.defaultValueIsLink = true;
+        } else {
+            throw new IllegalArgumentException("Root node must be of type Node.Obj or Node.Array!");
         }
     }
 }
